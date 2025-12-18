@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "Sentry": {
+      "url": "https://mcp.sentry.dev/mcp/kedar-hy/support-ai",
+      "type": "http"
+    }
+  }
+}
