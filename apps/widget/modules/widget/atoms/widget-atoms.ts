@@ -10,7 +10,6 @@ export const loadingMessageAtom = atom<string | null>(null);
 export const organizationIdAtom =atom<string | null>(null);
 
 // Organization Scoped contact session atom
-
 export const contactSessionIdAtomFamily = atomFamily(
     (organizationId: string) => {
       return atomWithStorage<Id<"contactSessions"> | null>(
@@ -18,5 +17,11 @@ export const contactSessionIdAtomFamily = atomFamily(
         null
       );
     }
-  );
+);
+
+//conversationId atom
+
+export const conversationIdAtom = atom<Id<"conversations"> | null> (null);
+
+
   
