@@ -1,5 +1,6 @@
 import { mutation, query } from "../_generated/server";
 import { ConvexError, v } from "convex/values";
+import { supportAgent } from '../../system/agents/supportAgent';
 
 export const getOne = query({
     args:{
@@ -17,7 +18,16 @@ export const getOne = query({
 
         const conversation = await ctx.db.get(args.conversationId);
         if(!conversation){
-            return null;
+            throw new ConvexError({
+                code:"NOT FOUND",
+                message:"Conversation Not Found"
+            })
+        }
+        if(conversation.contactSessionId !==session._id){
+            throw new ConvexError({
+                code:"UNAUTHORIZED",
+                message:"Incorrect session"
+            })
         }
         return {
             _id:conversation._id,
@@ -40,8 +50,9 @@ export const create = mutation({
             })
         }
 
-        // TODO : Replace once functionality for thread creation is present
-        const threadId = "123";
+        const {threadId} = await supportAgent.createThread(ctx,{
+            userId:args.organizationId
+        })
 
         const conversationId = await ctx.db.insert("conversations",{
             contactSessionId:session._id,
