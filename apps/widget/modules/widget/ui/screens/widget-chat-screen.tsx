@@ -16,7 +16,7 @@ import { AIMessage, AIMessageContent } from '@workspace/ui/components/ai/message
 import { Form, FormField } from "@workspace/ui/components/form";
 import { useInfiniteScroll } from '@workspace/ui/hooks/use-infinite-scroll';
 import { InfiniteScrollTrigger } from '@workspace/ui/components/infinite-scroll-trigger';
-import { DicebearAvtar } from '../../../../../../packages/ui/src/components/dicebar-avatar';
+import { DicebearAvtar } from '@workspace/ui/components/dicebar-avatar';
 
 // form Schema
 const formSchema = z.object({
