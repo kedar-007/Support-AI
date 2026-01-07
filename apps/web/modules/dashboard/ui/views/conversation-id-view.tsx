@@ -1,5 +1,6 @@
 "use client"
-
+import { useInfiniteScroll } from "@workspace/ui/hooks/use-infinite-scroll";
+import { InfiniteScrollTrigger } from "@workspace/ui/components/infinite-scroll-trigger";
 import { api } from "@workspace/backend/_generated/api";
 import { Id } from "@workspace/backend/_generated/dataModel";
 import { Button } from "@workspace/ui/components/button";
@@ -15,6 +16,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toUIMessages, useThreadMessages } from '@convex-dev/agent/react';
 import { DicebearAvtar } from "@workspace/ui/components/dicebar-avatar";
+import { ConversationStatusButton } from "../componets/conversation-status-button";
+import { useState } from "react";
+
 
 
 const formSchema = z.object({
@@ -30,6 +34,17 @@ export const ConversationIdView = ({ conversationId }: { conversationId: Id<"con
         conversation?.threadId ? { threadId: conversation.threadId } : "skip",
         { initialNumItems: 10 }
     );
+
+   const{topElementRef,
+    handleLoadMore,
+    canLoadMore,
+    isLoadingFirstPage,
+    isLoadingMore
+   } = useInfiniteScroll({
+        status:messages.status,
+        loadMore:messages.loadMore,
+        loadSize:10
+    })
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -49,15 +64,53 @@ export const ConversationIdView = ({ conversationId }: { conversationId: Id<"con
             console.error(error);
         }
     }
+
+    const [isUpdatingStatus,setIsUpdatingStatus] = useState(false);
+
+    const updateConversationStatus = useMutation(api.private.conversations.updateStatus);
+    const handleToggleStatus = async () =>{
+        if(!conversation){
+            return;
+        }
+
+        let newStatus : "unresolved" | "resolved" | "escalated";
+        setIsUpdatingStatus(true);
+
+        //cycle through states:unresolved -> escalated -> resolved -> unresolved
+        if(conversation.status === "unresolved"){
+            newStatus="escalated"
+        } else if(conversation.status === "escalated"){
+            newStatus="resolved";
+        }else{
+            newStatus="unresolved"
+        }
+
+        try {
+            await updateConversationStatus({
+                conversationId,
+                status:newStatus
+            })
+        } catch (error) {
+            console.error(error);
+            
+        } finally{
+            setIsUpdatingStatus(false);
+        }
+    }
     return <div className="flex h-full flex-col bg-muted">
         <header className="flex items-center justify-between border-b bg-background p-2.5">
             <Button size="sm" variant="ghost">
                 <MoreHorizontal />
             </Button>
+            {!!conversation && (
+                <ConversationStatusButton onClick={handleToggleStatus} status={conversation?.status} disabled={isUpdatingStatus}/>
+            )}
+            
 
         </header>
         <AIConversation className="max-h-[calc(100vh-180px)]">
             <AIConversationContent>
+                <InfiniteScrollTrigger canLoadMore={canLoadMore} isLoadingMore={isLoadingMore} onLoadMore={handleLoadMore} ref={topElementRef}/>
                 {toUIMessages(messages.results ?? []).map((message) => (
                     <AIMessage
                         //InReverse we are watching from assistant perspective
@@ -106,7 +159,7 @@ export const ConversationIdView = ({ conversationId }: { conversationId: Id<"con
                     />
                     <AIInputToolbar>
                         <AIInputTools>
-                            <AIInputButton>
+                            <AIInputButton disabled={conversation?.status === "resolved"}>
                                 <Wand2Icon/>
                                 Enhance
                             </AIInputButton>
