@@ -35,7 +35,7 @@ export const ConversationsPanel = () => {
         status: conversations.status,
         loadMore: conversations.loadMore,
         loadSize: 10,
-        observerEnabled: true
+        // observerEnabled: true
     })
     return (
         <div className="flex h-full w-full flex-col bg-background text-sidebar-foreground">
